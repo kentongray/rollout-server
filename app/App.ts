@@ -21,10 +21,12 @@ server.route({
   path: '/',
   handler: function (request, reply) {
     reply(`
-<h1>Rollout API</h1>
-<a href="/upcoming?latitude=29.7982722&longitude=-95.3736702">Upcoming</a> 
-| 
-<a href="https://github.com/kentongray/rollout-server">More info here eventually</a>
+<html><body style="background-color:#5bbb88;font-family: helvetica;font-weight: 400;color: white;">
+  <h1>Rollout API</h1>
+  <a href="/upcoming?latitude=29.7982722&longitude=-95.3736702">Upcoming</a> 
+  | 
+  <a href="https://github.com/kentongray/rollout-server">More info here eventually</a>
+</body></html>
       `)
   }
 });
