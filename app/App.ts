@@ -37,7 +37,7 @@ server.route({
   handler: function (request, reply) {
     var scheduler = new HoustonScheduler({
       coords: {
-        latitude: 29.7982722, longitude: -95.3736702
+        latitude: request.query.latitude, longitude: request.query.longitude
       }
     });
     scheduler.whenLoaded.then((events) => {
