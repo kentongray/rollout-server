@@ -18,4 +18,9 @@ More end points soonish
 * npm install
 * npm start
 
+## Help!
+I'd love to see updates ideas worth working on:
 
+Building in some sort of messaging system (geocoords?) 
+Move push notifications to server
+MORE CITY DATA SOURCES, would be awesome to have suburbs or other metros
