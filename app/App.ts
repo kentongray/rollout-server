@@ -25,7 +25,7 @@ server.route({
   <h1>Rollout API</h1>
   <a href="/upcoming?latitude=29.7982722&longitude=-95.3736702">Upcoming</a> 
   | 
-  <a href="https://github.com/kentongray/rollout-server">More info here eventually</a>
+  <a href="https://github.com/kentongray/rollout-server">Docs</a>
 </body></html>
       `)
   }
@@ -40,9 +40,12 @@ server.route({
         latitude: request.query.latitude, longitude: request.query.longitude
       }
     });
-    scheduler.whenLoaded.then((events) => {
+    scheduler.getUpcomingEvents(request.query.days || 60).then((events) => {
       console.log(events);
-      reply(JSON.stringify(events))
+      reply(JSON.stringify( {
+        events: events,
+        schedule: scheduler.pickupDays
+      }))
     });
   }
 });

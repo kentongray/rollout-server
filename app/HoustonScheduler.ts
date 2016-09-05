@@ -1,11 +1,16 @@
 import * as moment from 'moment';
 import * as _ from 'lodash';
 import * as fetch from 'node-fetch';
+import {HOLIDAYS} from './HoustonHolidays';
 
-
+//interfaces for different coordinate types, i'm trying to prefer x/y
 interface PosXY {x:number,y:number}
 interface PosCoords {coords: {latitude:number,longitude:number}}
 interface PosArcGis {x:number,y:number, spatialReference: any}
+
+//interface for pickup day data, this will likely have to be abstracted further for different metros
+interface PickupDay {wasteDay:number; junkWeekOfMonth:number; junkDay:number; recyclingDay:number; recyclingOnEvenWeeks:boolean}
+
 type Position = PosXY | PosCoords;
 
 //let locale = window.navigator.userLanguage || window.navigator.language;
@@ -26,7 +31,6 @@ type Position = PosXY | PosCoords;
 
  **/
 
-interface PickupDay {wasteDay:number; junkWeekOfMonth:number; junkDay:number; recyclingDay:number; recyclingScheduleA:boolean}
 
 export class HoustonScheduler {
   numberOfDays:number;
@@ -44,9 +48,7 @@ export class HoustonScheduler {
   constructor(pos:Position, numberOfDays:number = 60) {
     this.numberOfDays = numberOfDays;
     //an array of moment dates that may have disrupted schedules
-    this.holidays = ['2015-11-11', '2015-11-12', '2015-11-27', '2015-11-28',
-      '2015-12-24', '2015-12-25', '2015-12-26',
-      '2015-01-01', '2015-01-02'].map((d)=>moment(d, ' "YYYY-MM-DD"'));
+    this.holidays = HOLIDAYS;
 
     if ((<PosCoords> pos).coords) {
       this.pos = {y: (<PosCoords> pos).coords.latitude, x: (<PosCoords> pos).coords.longitude, spatialReference: {"wkid": 4326}};
@@ -73,12 +75,18 @@ export class HoustonScheduler {
 
     this.whenLoaded = Promise.all<any>([wastePromise, junkPromise, recyclingPromise]).then((allResults)=> {
       const [wasteData, junkData, recyclingData] = allResults;
-      console.log(allResults, 'all results')
       this.configure(wasteData, junkData, recyclingData);
-      return this.events;
+      return this;
     });
   }
 
+  /**
+   * Take results from COH API and turn them into something we can work with
+   * @param wasteData
+   * @param junkData
+   * @param recyclingData
+   * @returns {Array<any>}
+   */
   configure(wasteData, junkData, recyclingData) {
     //waste is one day a week
     let wasteDay = -1;
@@ -91,22 +99,21 @@ export class HoustonScheduler {
     let junkDay = -1;
     if (this.isValidData(junkData)) {
       let junkPattern = junkData.features[0].attributes.SERVICE_DA;
-      junkWeekOfMonth = junkPattern.substr(0, 1);
+      junkWeekOfMonth = parseInt(junkPattern.substr(0, 1));
       junkDay = HoustonScheduler.getDayIndex(junkPattern.substr(junkPattern.indexOf(' ')));
     }
 
     //recycling pickup is alternating weeks
     let recyclingDay = -1;
-    let recyclingScheduleA = false;
+    let recyclingOnEvenWeeks = false;
     if (this.isValidData(recyclingData)) {
       let recyclingSchedule = recyclingData.features[0].attributes.SERVICE_DAY;
       recyclingDay = HoustonScheduler.getDayIndex(recyclingSchedule.split('-')[0]);
       //if true it is the "first week", if false it is the second week
-      recyclingScheduleA = recyclingSchedule.includes('-A');
+      recyclingOnEvenWeeks = recyclingSchedule.includes('-A');
     }
 
-    this.pickupDays = {wasteDay, junkWeekOfMonth, junkDay, recyclingDay, recyclingScheduleA};
-    this.buildEvents(this.numberOfDays);
+    this.pickupDays = {wasteDay, junkWeekOfMonth, junkDay, recyclingDay, recyclingOnEvenWeeks};
     return this.events;
   }
 
@@ -148,7 +155,7 @@ export class HoustonScheduler {
   isRecyclingDay(day) {
     //recycling schedule A occurs every other week (starting at second week)
     let isEvenWeek = day.weeks() % 2 == 0;
-    let isThisWeek = (this.pickupDays.recyclingScheduleA && isEvenWeek) || (!this.pickupDays.recyclingScheduleA && !isEvenWeek);
+    let isThisWeek = (this.pickupDays.recyclingOnEvenWeeks && isEvenWeek) || (!this.pickupDays.recyclingOnEvenWeeks && !isEvenWeek);
     return isThisWeek && day.day() == this.pickupDays.recyclingDay;
   }
 
@@ -167,16 +174,17 @@ export class HoustonScheduler {
     return _.toPairs(eventsForDay).filter((category) => category[1]).map((category)=>category[0]);
   }
 
-  buildEvents(numberOfDays) {
-    let day = moment().startOf('day');
-    let groupEvents = (day)=> {
-      return {
-        day: day, categories: this.getCategoriesForDay(day), possibleHoliday: this.isPossibleHoliday(day)
-      }
-    };
-    this.events = _.range(0, numberOfDays).map((i)=>day.clone().add(i, 'days')).map(groupEvents)
-      .filter((event) =>event.categories.length);
-
+  getUpcomingEvents(numberOfDays = 60) {
+    return this.whenLoaded.then(() => {
+      let day = moment().startOf('day');
+      let groupEvents = (day)=> {
+        return {
+          day: day, categories: this.getCategoriesForDay(day), possibleHoliday: this.isPossibleHoliday(day)
+        }
+      };
+      return _.range(0, numberOfDays).map((i)=>day.clone().add(i, 'days')).map(groupEvents)
+        .filter((event) =>event.categories.length);
+    });
   }
 
   static getDayIndex(dayStr) {
