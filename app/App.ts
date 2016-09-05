@@ -6,14 +6,14 @@ import * as Hapi from "hapi";
 import {HoustonScheduler} from "./HoustonScheduler";
 
 const server = new Hapi.Server();
-server.connection({port: 80});
+server.connection({port: 80, routes: {cors: true}});
 
 server.start((err) => {
   if (err) {
     throw err;
   }
   console.log('Server running at:', server.info.uri);
-}, { cors: true });
+});
 
 server.route({
   method: 'GET',
@@ -35,13 +35,13 @@ server.route({
   path: '/upcoming',
   handler: function (request, reply) {
     var scheduler = new HoustonScheduler({
-        latitude: request.query.latitude, longitude: request.query.longitude
+      latitude: request.query.latitude, longitude: request.query.longitude
     });
     scheduler.getUpcomingEvents(request.query.days || 60).then((events) => {
       console.log(events);
-      reply(JSON.stringify( {
+      reply(JSON.stringify({
         events: events,
-        schedule: scheduler.pickupDays
+        days: scheduler.pickupDays
       }))
     });
   }
