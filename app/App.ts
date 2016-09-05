@@ -9,12 +9,11 @@ const server = new Hapi.Server();
 server.connection({port: 80});
 
 server.start((err) => {
-
   if (err) {
     throw err;
   }
   console.log('Server running at:', server.info.uri);
-});
+}, { cors: true });
 
 server.route({
   method: 'GET',
@@ -36,9 +35,7 @@ server.route({
   path: '/upcoming',
   handler: function (request, reply) {
     var scheduler = new HoustonScheduler({
-      coords: {
         latitude: request.query.latitude, longitude: request.query.longitude
-      }
     });
     scheduler.getUpcomingEvents(request.query.days || 60).then((events) => {
       console.log(events);

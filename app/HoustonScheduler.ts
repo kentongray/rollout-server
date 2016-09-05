@@ -3,9 +3,9 @@ import * as _ from 'lodash';
 import * as fetch from 'node-fetch';
 import {HOLIDAYS} from './HoustonHolidays';
 
-//interfaces for different coordinate types, i'm trying to prefer x/y
+//interfaces for different coordinate types, prefer latitude longitude
 interface PosXY {x:number,y:number}
-interface PosCoords {coords: {latitude:number,longitude:number}}
+interface PosCoords {latitude:number,longitude:number}
 interface PosArcGis {x:number,y:number, spatialReference: any}
 
 //interface for pickup day data, this will likely have to be abstracted further for different metros
@@ -19,7 +19,6 @@ type Position = PosXY | PosCoords;
 /**
  *
  * Handles pickup schedules for Houston.
- * TODO: Abstract to more generic schedule based system (cron?) and abstract Houston data to adapter allow easy addition of more regions
  *
  * Example "API" calls for citymap
  trash
@@ -30,38 +29,29 @@ type Position = PosXY | PosCoords;
  http://mycity.houstontx.gov/ArcGIS10/rest/services/wm/MyCityMapData_wm/MapServer/113/query?geometryType=esriGeometryPoint&f=json&outSR=102100&outFields=SERVICE%5FDAY%2CQUAD&geometry=%7B%22x%22%3A%2D10617688%2E9548%2C%22y%22%3A3467985%2E443099998%7D&spatialRel=esriSpatialRelIntersects&returnGeometry=false
 
  **/
-
-
 export class HoustonScheduler {
   numberOfDays:number;
   pickupDays:PickupDay;
   holidays;
   events:Array<any>;
   whenLoaded:Promise<any>;
-  private pos:PosArcGis;
 
   /**
    * Initializes the obj with event data
    * @param pos
    * @param numberOfDays
    */
-  constructor(pos:Position, numberOfDays:number = 60) {
+  constructor(pos:PosCoords, numberOfDays:number = 60) {
     this.numberOfDays = numberOfDays;
     //an array of moment dates that may have disrupted schedules
     this.holidays = HOLIDAYS;
 
-    if ((<PosCoords> pos).coords) {
-      this.pos = {y: (<PosCoords> pos).coords.latitude, x: (<PosCoords> pos).coords.longitude, spatialReference: {"wkid": 4326}};
-    }
-    else  {
-      this.pos = {x: (<PosXY> pos).x, y:(<PosXY> pos).y, spatialReference: {"wkid": 4326}};
-    }
-
+    const esriPos = {y: (<PosCoords> pos).latitude, x: (<PosCoords> pos).longitude, spatialReference: {"wkid": 4326}};
 
     let params = {
       geometryType: 'esriGeometryPoint',
       f: "json", outSR: 102100, outFields: encodeURIComponent('DAY,QUAD,SERVICE_DA,SERVICE_DAY'),
-      geometry: JSON.stringify(this.pos),
+      geometry: JSON.stringify(esriPos),
       spatialRel: 'esriSpatialRelIntersects', returnGeometry: false
     };
     let paramStr = "?";
@@ -190,5 +180,4 @@ export class HoustonScheduler {
   static getDayIndex(dayStr) {
     return moment(dayStr, "dddd").day()
   }
-
 }
