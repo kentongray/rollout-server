@@ -41,7 +41,7 @@ server.route({
       console.log(events);
       reply(JSON.stringify({
         events: events,
-        days: scheduler.pickupDays
+        schedule: scheduler.pickupDays
       }))
     });
   }
