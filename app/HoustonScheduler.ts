@@ -61,9 +61,6 @@ export class HoustonScheduler {
     const [wastePromise, junkPromise, recyclingPromise] = mapNumbers.map(_ => `${mapServer}${_}/query${paramStr}`)
       .map(_ => axios.request({ method: 'GET', url:_, timeout: 15000,  responseType: 'json' }));
 
-    
-console.log(wastePromise);
-    wastePromise.then(()=>console.log('wtff', e));
     this.whenLoaded = Promise.all<any>([wastePromise, junkPromise, recyclingPromise]).then((allResults)=> {
       const [wasteData, junkData, recyclingData] = allResults.map(_ => _.data);
       this.configure(wasteData, junkData, recyclingData);
