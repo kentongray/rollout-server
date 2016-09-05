@@ -38,7 +38,8 @@ server.route({
       latitude: request.query.latitude, longitude: request.query.longitude
     });
     scheduler.getUpcomingEvents(request.query.days || 60).then((events) => {
-      console.log(events);
+      //convert moment day to friendly string (leaving serialization logic in here for now)
+      events.forEach(e => { e.day = e.day.format("YYYY-MM-DD") });
       reply(JSON.stringify({
         events: events,
         schedule: scheduler.pickupDays

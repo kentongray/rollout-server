@@ -173,7 +173,7 @@ export class HoustonScheduler {
         }
       };
       return _.range(0, numberOfDays).map((i)=>day.clone().add(i, 'days')).map(groupEvents)
-        .filter((event) =>event.categories.length);
+        .filter((event) =>event.categories.length)
     });
   }
 
