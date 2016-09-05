@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 import * as _ from 'lodash';
-import * as fetch from 'node-fetch';
+import axios from 'axios';
 import {HOLIDAYS} from './HoustonHolidays';
 
 //interfaces for different coordinate types, prefer latitude longitude
@@ -59,12 +59,13 @@ export class HoustonScheduler {
     const mapServer = 'http://mycity.houstontx.gov/ArcGIS10/rest/services/wm/MyCityMapData_wm/MapServer/';
     const mapNumbers = [111, 112, 113]; //waste, junk and recycling
     const [wastePromise, junkPromise, recyclingPromise] = mapNumbers.map(_ => `${mapServer}${_}/query${paramStr}`)
-      .map(_ => fetch(_).then(res => res.json()));
+      .map(_ => axios.request({ method: 'GET', url:_, timeout: 15000,  responseType: 'json' }));
 
     
-
+console.log(wastePromise);
+    wastePromise.then(()=>console.log('wtff', e));
     this.whenLoaded = Promise.all<any>([wastePromise, junkPromise, recyclingPromise]).then((allResults)=> {
-      const [wasteData, junkData, recyclingData] = allResults;
+      const [wasteData, junkData, recyclingData] = allResults.map(_ => _.data);
       this.configure(wasteData, junkData, recyclingData);
       return this;
     });

@@ -3,6 +3,7 @@
 /// <reference path="../typings/tsd.d.ts" />
 
 import * as Hapi from "hapi";
+import * as Boom from "boom";
 import {HoustonScheduler} from "./HoustonScheduler";
 
 const server = new Hapi.Server();
@@ -44,6 +45,9 @@ server.route({
         events: events,
         schedule: scheduler.pickupDays
       }))
+    }).catch((error) => {
+      console.error("error loading", Boom.gatewayTimeout("Error loading schedule", error));
+      reply(Boom.gatewayTimeout("Error loading schedule", error));
     });
   }
 });
