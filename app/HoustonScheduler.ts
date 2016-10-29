@@ -4,37 +4,50 @@ import axios from 'axios';
 import {HOLIDAYS} from './HoustonHolidays';
 
 //interfaces for different coordinate types, prefer latitude longitude
-interface PosXY {x:number,y:number}
 interface PosCoords {latitude:number,longitude:number}
-interface PosArcGis {x:number,y:number, spatialReference: any}
 
 //interface for pickup day data, this will likely have to be abstracted further for different metros
 interface PickupDay {wasteDay:number; junkWeekOfMonth:number; junkDay:number; recyclingDay:number; recyclingOnEvenWeeks:boolean}
 
-type Position = PosXY | PosCoords;
-
-//let locale = window.navigator.userLanguage || window.navigator.language;
-//moment.locale(locale);
+//event format
+interface EventInfo {
+  category:string[];
+  day:string;
+  possibleHoliday:boolean
+}
 
 /**
  *
  * Handles pickup schedules for Houston.
  *
- * Example "API" calls for citymap
- trash
- http://mycity.houstontx.gov/ArcGIS10/rest/services/wm/MyCityMapData_wm/MapServer/111/query?geometryType=esriGeometryPoint&f=json&outSR=102100&outFields=DAY%2CQUAD&geometry=%7B%22x%22%3A%2D10617688%2E9548%2C%22y%22%3A3467985%2E443099998%7D&spatialRel=esriSpatialRelIntersects&returnGeometry=false
- heavy/junk
- http://mycity.houstontx.gov/ArcGIS10/rest/services/wm/MyCityMapData_wm/MapServer/112/query?geometryType=esriGeometryPoint&f=json&outSR=102100&outFields=SERVICE%5FDA%2CQUAD&geometry=%7B%22x%22%3A%2D10617688%2E9548%2C%22y%22%3A3467985%2E443099998%7D&spatialRel=esriSpatialRelIntersects&returnGeometry=false
- recycling
- http://mycity.houstontx.gov/ArcGIS10/rest/services/wm/MyCityMapData_wm/MapServer/113/query?geometryType=esriGeometryPoint&f=json&outSR=102100&outFields=SERVICE%5FDAY%2CQUAD&geometry=%7B%22x%22%3A%2D10617688%2E9548%2C%22y%22%3A3467985%2E443099998%7D&spatialRel=esriSpatialRelIntersects&returnGeometry=false
-
+ * Takes ArcGIS data and translates it to human json
+ *
+ * Example ArcGIS calls for citymap
+ * trash
+ * http://mycity.houstontx.gov/cohgis/rest/services/SWD/SolidWaste_wm/MapServer/6/query?&geometry=%7B%22y%22%3A%2229.7982722%22%2C%22x%22%3A%22-95.3736702%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects&returnGeometry=false&outSR=102100&f=json&outFields=DAY
+ *
+ * heavy/junk
+ * http://mycity.houstontx.gov/cohgis/rest/services/SWD/SolidWaste_wm/MapServer/5/query?&geometry=%7B%22y%22%3A%2229.7982722%22%2C%22x%22%3A%22-95.3736702%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects&returnGeometry=false&outSR=102100&f=json&outFields=SERVICE_DA
+ * recycling
+ * http://mycity.houstontx.gov/cohgis/rest/services/SWD/SolidWaste_wm/MapServer/4/query?&geometry=%7B%22y%22%3A%2229.7982722%22%2C%22x%22%3A%22-95.3736702%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects&returnGeometry=false&outSR=102100&f=json&outFields=SERVICE_DAY
  **/
 export class HoustonScheduler {
   numberOfDays:number;
   pickupDays:PickupDay;
-  holidays;
-  events:Array<any>;
+  holidays = HOLIDAYS;
+  events:EventInfo[];
   whenLoaded:Promise<any>;
+
+
+  readonly mapNumbers = [6, 5, 4]; //waste (6), junk (5) and recycling (4)
+
+  readonly mapServer = 'http://mycity.houstontx.gov/cohgis/rest/services/SWD/SolidWaste_wm/MapServer/';
+  //the city is cruel and uses different outfields for each day
+  readonly scheduleFieldPerMap = {
+    6: 'DAY',
+    5: 'SERVICE_DA',
+    4: 'SERVICE_DAY'
+  };
 
   /**
    * Initializes the obj with event data
@@ -43,27 +56,28 @@ export class HoustonScheduler {
    */
   constructor(pos:PosCoords, numberOfDays:number = 60) {
     this.numberOfDays = numberOfDays;
-    //an array of moment dates that may have disrupted schedules
-    this.holidays = HOLIDAYS;
+    const esriPos = {y: (<PosCoords> pos).latitude, x: (<PosCoords> pos).longitude, spatialReference: {'wkid': 4326}};
 
-    const esriPos = {y: (<PosCoords> pos).latitude, x: (<PosCoords> pos).longitude, spatialReference: {"wkid": 4326}};
 
-    let params = {
-      geometryType: 'esriGeometryPoint',
-      f: "json", outSR: 102100, outFields: encodeURIComponent('DAY,QUAD,SERVICE_DA,SERVICE_DAY'),
+    const params = {
       geometry: JSON.stringify(esriPos),
-      spatialRel: 'esriSpatialRelIntersects', returnGeometry: false
+      geometryType: 'esriGeometryPoint',
+      spatialRel: 'esriSpatialRelIntersects',
+      returnGeometry: 'false',
+      outSR: '102100',
+      f: 'json',
     };
-    let paramStr = "?";
-    Object.keys(params).forEach((key) => paramStr += "&"  + key + "=" + encodeURIComponent(params[key]));
-    const mapServer = 'http://mycity.houstontx.gov/ArcGIS10/rest/services/wm/MyCityMapData_wm/MapServer/';
-    const mapNumbers = [111, 112, 113]; //waste, junk and recycling
-    const [wastePromise, junkPromise, recyclingPromise] = mapNumbers.map(_ => `${mapServer}${_}/query${paramStr}`)
-      .map(_ => axios.request({ method: 'GET', url:_, timeout: 15000,  responseType: 'json' }));
+
+    const paramStr = Object.keys(params).reduce((paramStr, key) => `${paramStr}&${key}=${encodeURIComponent(params[key])}`, '?');
+
+
+    const [wastePromise, junkPromise, recyclingPromise] = this
+      .mapNumbers.map(map => `${this.mapServer}${map}/query${paramStr}&outFields=${this.scheduleFieldPerMap[map]}`)
+      .map(_ => axios.request({method: 'GET', url: _, timeout: 15000, responseType: 'json'}));
 
     this.whenLoaded = Promise.all<any>([wastePromise, junkPromise, recyclingPromise]).then((allResults)=> {
-      const [wasteData, junkData, recyclingData] = allResults.map(_ => _.data);
-      this.configure(wasteData, junkData, recyclingData);
+      const [wasteData, junkData, recyclingData] = allResults.map(r => r.data);
+      this.parseData(wasteData, junkData, recyclingData);
       return this;
     });
   }
@@ -75,7 +89,7 @@ export class HoustonScheduler {
    * @param recyclingData
    * @returns {Array<any>}
    */
-  configure(wasteData, junkData, recyclingData) {
+  parseData(wasteData, junkData, recyclingData) {
     //waste is one day a week
     let wasteDay = -1;
     if (this.isValidData(wasteData)) {
@@ -176,6 +190,6 @@ export class HoustonScheduler {
   }
 
   static getDayIndex(dayStr) {
-    return moment(dayStr, "dddd").day()
+    return moment(dayStr, 'dddd').day()
   }
 }
