@@ -1,7 +1,5 @@
 'use strict';
 
-/// <reference path="../typings/tsd.d.ts" />
-
 import * as Hapi from "hapi";
 import * as Boom from "boom";
 import {HoustonScheduler} from "./HoustonScheduler";
@@ -40,9 +38,10 @@ server.route({
     });
     scheduler.getUpcomingEvents(request.query.days || 60).then((events) => {
       //convert moment day to friendly string (leaving serialization logic in here for now)
-      events.forEach(e => { e.day = e.day.format("YYYY-MM-DD") });
+      const jsonEvents:any[] = events.map(event => (<any>Object).assign(event, { day: event.day.format("YYYY-MM-DD") }));
+
       reply(JSON.stringify({
-        events: events,
+        events: jsonEvents,
         schedule: scheduler.pickupDays
       }))
     }).catch((error) => {
