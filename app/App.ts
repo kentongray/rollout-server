@@ -46,8 +46,8 @@ server.route({
         schedule: scheduler.pickupDays
       }))
     }).catch((error) => {
-      console.error("error loading", Boom.gatewayTimeout("Error loading schedule", error));
-      reply(Boom.gatewayTimeout("Error loading schedule", error));
+      console.error("Error Loading Schedule:", request.query, error);
+      reply(Boom.gatewayTimeout("Error Loading Schedule", error));
     });
   }
 });
