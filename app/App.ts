@@ -3,6 +3,10 @@
 import * as Hapi from "hapi";
 import * as Boom from "boom";
 import {HoustonScheduler} from "./HoustonScheduler";
+import GeoJsonHelper from "./GeoJsonHelper";
+import {isInState} from "./StateFinder";
+import {getScheduler} from "./Scheduler";
+
 
 const server = new Hapi.Server();
 server.connection({port: 80, routes: {cors: true}});
@@ -33,20 +37,34 @@ server.route({
   method: 'GET',
   path: '/upcoming',
   handler: function (request, reply) {
-    var scheduler = new HoustonScheduler({
-      latitude: request.query.latitude, longitude: request.query.longitude
-    });
-    scheduler.getUpcomingEvents(request.query.days || 60).then((events) => {
-      //convert moment day to friendly string (leaving serialization logic in here for now)
-      const jsonEvents:any[] = events.map(event => (<any>Object).assign(event, { day: event.day.format("YYYY-MM-DD") }));
 
-      reply(JSON.stringify({
-        events: jsonEvents,
-        schedule: scheduler.pickupDays
-      }))
-    }).catch((error) => {
-      console.error("Error Loading Schedule:", request.query, error);
-      reply(Boom.gatewayTimeout("Error Loading Schedule", error));
+    const pos = {
+      latitude: request.query.latitude, longitude: request.query.longitude
+    };
+
+    getScheduler(pos).then(scheduler => {
+      if(scheduler == null) {
+        reply(Boom.gatewayTimeout("Invalid Coordinates Specified. You are not in a supported region.", pos));
+      }
+      else {
+        scheduler.getUpcomingEvents(request.query.days || 60).then((events) => {
+          //convert moment day to friendly string (leaving serialization logic in here for now)
+          const jsonEvents:any[] = events.map(event => (<any>Object).assign(event, { day: event.day.format("YYYY-MM-DD") }));
+
+          reply(JSON.stringify({
+            events: jsonEvents,
+            schedule: scheduler.pickupDays
+          }))
+        }, (error) => {
+          console.error("Unexpected Error Loading Schedule:", request.query, error);
+          reply(Boom.gatewayTimeout("Error Loading Schedule", error));
+        }).catch((error) => {
+          console.error("Error Loading Schedule:", request.query, error);
+          reply(Boom.gatewayTimeout("Error Loading Schedule", error));
+        });
+      }
     });
+
+
   }
 });
