@@ -1,20 +1,17 @@
-import * as moment from 'moment';
-import * as _ from 'lodash';
-import axios from 'axios';
-import {HOLIDAYS} from './HoustonHolidays';
+import * as moment from "moment";
+import {Moment} from "moment";
+import * as _ from "lodash";
+import axios from "axios";
+import {HOLIDAYS} from "./HoustonHolidays";
+import {EventInfo, PickupDay, Scheduler} from "./Scheduler";
 
 //interfaces for different coordinate types, prefer latitude longitude
-interface PosCoords {latitude:number,longitude:number}
-
-//interface for pickup day data, this will likely have to be abstracted further for different metros
-interface PickupDay {wasteDay:number; junkWeekOfMonth:number; junkDay:number; recyclingDay:number; recyclingOnEvenWeeks:boolean}
-
-//event format
-interface EventInfo {
-  category:string[];
-  day:string;
-  possibleHoliday:boolean
+export interface PosCoords {
+  latitude: number,longitude: number
 }
+
+
+
 
 /**
  *
@@ -31,13 +28,15 @@ interface EventInfo {
  * recycling
  * http://mycity.houstontx.gov/cohgis/rest/services/SWD/SolidWaste_wm/MapServer/4/query?&geometry=%7B%22y%22%3A%2229.7982722%22%2C%22x%22%3A%22-95.3736702%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects&returnGeometry=false&outSR=102100&f=json&outFields=SERVICE_DAY
  **/
-export class HoustonScheduler {
-  numberOfDays:number;
-  pickupDays:PickupDay;
+export class HoustonScheduler implements Scheduler {
+  numberOfDays: number;
+  pickupDays: PickupDay;
   holidays = HOLIDAYS;
-  events:EventInfo[];
-  whenLoaded:Promise<any>;
+  whenLoaded: Promise<any>;
 
+  static getDayIndex(dayStr) {
+    return moment(dayStr, 'dddd').day()
+  }
 
   readonly mapNumbers = [6, 5, 4]; //waste (6), junk (5) and recycling (4)
 
@@ -54,7 +53,7 @@ export class HoustonScheduler {
    * @param pos
    * @param numberOfDays
    */
-  constructor(pos:PosCoords, numberOfDays:number = 60) {
+  constructor(pos: PosCoords, numberOfDays: number = 60) {
     this.numberOfDays = numberOfDays;
     const esriPos = {y: (<PosCoords> pos).latitude, x: (<PosCoords> pos).longitude, spatialReference: {'wkid': 4326}};
 
@@ -75,7 +74,8 @@ export class HoustonScheduler {
       .mapNumbers.map(map => `${this.mapServer}${map}/query${paramStr}&outFields=${this.scheduleFieldPerMap[map]}`)
       .map(_ => axios.request({method: 'GET', url: _, timeout: 15000, responseType: 'json'}));
 
-    this.whenLoaded = Promise.all<any>([wastePromise, junkPromise, recyclingPromise]).then((allResults)=> {
+    //get all relevant data
+    this.whenLoaded = Promise.all<any>([wastePromise, junkPromise, recyclingPromise]).then((allResults) => {
       const [wasteData, junkData, recyclingData] = allResults.map(r => r.data);
       this.parseData(wasteData, junkData, recyclingData);
       return this;
@@ -122,7 +122,6 @@ export class HoustonScheduler {
     }
 
     this.pickupDays = {wasteDay, junkWeekOfMonth, junkDay, recyclingDay, recyclingOnEvenWeeks};
-    return this.events;
   }
 
   isValidData(data) {
@@ -179,23 +178,21 @@ export class HoustonScheduler {
       recycling: this.isRecyclingDay(day)
     };
     //group filter out empty days
-    return _.toPairs(eventsForDay).filter((category) => category[1]).map((category)=>category[0]);
+    return _.toPairs(eventsForDay).filter((category) => category[1]).map((category) => category[0]);
   }
 
-  getUpcomingEvents(numberOfDays = 60) {
+  getUpcomingEvents(numberOfDays = 60): Promise<EventInfo[]> {
     return this.whenLoaded.then(() => {
-      let day = moment().startOf('day');
-      let groupEvents = (day)=> {
+      let day: Moment = moment().startOf('day');
+      let groupEvents: (day) => EventInfo = (day) => {
         return {
           day: day, categories: this.getCategoriesForDay(day), possibleHoliday: this.isPossibleHoliday(day)
         }
       };
-      return _.range(0, numberOfDays).map((i)=>day.clone().add(i, 'days')).map(groupEvents)
-        .filter((event) =>event.categories.length)
+      return _.range(0, numberOfDays).map((i) => day.clone().add(i, 'days')).map(groupEvents)
+        .filter((event) => event.categories.length)
     });
   }
 
-  static getDayIndex(dayStr) {
-    return moment(dayStr, 'dddd').day()
-  }
+
 }
