@@ -2,11 +2,8 @@
 
 import * as Hapi from "hapi";
 import * as Boom from "boom";
-import {HoustonScheduler} from "./HoustonScheduler";
-import GeoJsonHelper from "./GeoJsonHelper";
-import {isInState} from "./StateFinder";
 import {getScheduler} from "./Scheduler";
-
+import {houstonNotifications, notifications} from "./Notifications";
 
 const server = new Hapi.Server();
 server.connection({port: 80, routes: {cors: true}});
@@ -43,15 +40,16 @@ server.route({
     };
 
     getScheduler(pos).then(scheduler => {
-      if(scheduler == null) {
+      if (scheduler == null) {
         reply(Boom.gatewayTimeout("Invalid Coordinates Specified. You are not in a supported region.", pos));
       }
       else {
         scheduler.getUpcomingEvents(request.query.days || 60).then((events) => {
           //convert moment day to friendly string (leaving serialization logic in here for now)
-          const jsonEvents:any[] = events.map(event => (<any>Object).assign(event, { day: event.day.format("YYYY-MM-DD") }));
+          const jsonEvents: any[] = events.map(event => (<any>Object).assign(event, {day: event.day.format("YYYY-MM-DD")}));
 
           reply(JSON.stringify({
+            notifications: houstonNotifications,
             events: jsonEvents,
             schedule: scheduler.pickupDays
           }))
@@ -66,5 +64,14 @@ server.route({
     });
 
 
+  }
+});
+
+
+server.route({
+  method: 'GET',
+  path: '/notifications/{city}',
+  handler: function (request, reply) {
+    reply(JSON.stringify(notifications[request.params.city]))
   }
 });

@@ -15,7 +15,6 @@ export interface EventInfo {
 }
 
 export interface Scheduler {
-
   getUpcomingEvents(numberOfDays: number): Promise<EventInfo[]>
   pickupDays: PickupDay
 }
