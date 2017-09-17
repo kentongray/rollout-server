@@ -10,9 +10,6 @@ export interface PosCoords {
   latitude: number,longitude: number
 }
 
-
-
-
 /**
  *
  * Handles pickup schedules for Houston.
