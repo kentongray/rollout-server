@@ -12,6 +12,13 @@ export interface Notification {
 // someday it would be nice to have a backend for
 const notifications: { houston: [Notification] } = {
   "houston": [{
+    title: 'Recycling is back!',
+    text: 'Normal recycling schedules are restored. Tap here for the latest updates.',
+    link: 'http://www.houstontx.gov/solidwaste/',
+    urgent: true,
+    expiresOn: moment("2018-01-01")
+    },
+    {
     title: 'Harvey Updates',
     text: 'Recycling, Yard, Heavy and Tree pickup is suspended until further notice. \nFor the latest information about recovery efforts and potential schedule changes tap here.',
     link: 'http://www.houstontx.gov/solidwaste/',
