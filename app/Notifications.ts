@@ -12,7 +12,7 @@ export interface Notification {
 // someday it would be nice to have a backend for
 const notifications: { houston: [Notification] } = {
   "houston": [{
-    title: 'Recycling is returning (soon!)!',
+    title: 'Recycling is Returning (Soon)!',
     text: 'Normal recycling schedules are coming back Monday, November 13th. Tap here for the latest news.',
     link: 'http://www.houstontx.gov/solidwaste/',
     urgent: true,
