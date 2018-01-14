@@ -108,14 +108,11 @@ export class HoustonScheduler implements Scheduler {
     if (this.isValidData(recyclingData)) {
       let recyclingSchedule = recyclingData.features[0].attributes.SERVICE_DAY;
       recyclingDay = HoustonScheduler.getDayIndex(recyclingSchedule.split('-')[0]);
-      //if true it is the "first week", if false it is the second week
-      //WAIT: ugh edge cases this actually changes every year so to do this right we need to rename this to schedule a/b
-      //and move the decision to the event
-      //but i want to fix this now so i'm going with a change i'll have to deal with a year later!
-      //see you in 2018!
+      // on even years A schedule is on odd weeks, vice versa on odd years
       //http://www.houstontx.gov/solidwaste/Recycle_Cal.pdf
-      recyclingOnEvenWeeks = !recyclingSchedule.includes('-A');
-
+      const aSchedule = recyclingSchedule.includes('-A');
+      const isEvenYear = (moment().years() % 2 === 0);
+      recyclingOnEvenWeeks = isEvenYear ? !aSchedule : aSchedule;
     }
 
     this.pickupDays = {wasteDay, junkWeekOfMonth, junkDay, recyclingDay, recyclingOnEvenWeeks};
