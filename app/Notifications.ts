@@ -1,5 +1,5 @@
+import * as moment from "moment";
 import {Moment} from "moment";
-import * as moment from 'moment';
 
 export interface Notification {
   title: string;
@@ -17,8 +17,8 @@ const notifications: { houston: [Notification] } = {
     link: 'http://www.houstontx.gov/solidwaste/',
     urgent: true,
     expiresOn: moment("2018-02-01")
-    }
-    ]
+  }
+  ]
 };
 
 const houstonNotifications = notifications['houston'];
