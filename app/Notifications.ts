@@ -13,7 +13,7 @@ export interface Notification {
 const notifications: { houston: [Notification] } = {
   "houston": [{
     title: 'Heavy Trash Suspended',
-    text: 'Currently heavy trash is suspended until further notice. Tap here to learn more.',
+    text: 'Update: Tree/Junk Waste Collection to resume March 1, 2018. Tap here for more information.',
     link: 'http://www.houstontx.gov/solidwaste/',
     urgent: true,
     expiresOn: moment("2018-04-01")
