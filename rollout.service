@@ -1,0 +1,12 @@
+#systemd service to start rollout
+[Unit]
+Description=Rollout Server
+
+[Service]
+#Environment= MY_ENVIRONMENT_VAR =/path/to/file.config
+WorkingDirectory=/opt/rollout-server
+ExecStart=/bin/bash /opt/rollout-server/startup.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
