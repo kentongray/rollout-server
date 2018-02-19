@@ -3,8 +3,8 @@
 import * as Hapi from "hapi";
 import * as Boom from "boom";
 import {getScheduler} from "./Scheduler";
-import {houstonNotifications, notifications} from "./Notifications";
-
+import {houstonNotifications, Notification, notifications} from "./Notifications";
+import {getNotifications, addNotification} from './Database';
 const server = new Hapi.Server();
 server.connection({port: 80, routes: {cors: true}});
 
@@ -49,7 +49,7 @@ server.route({
           const jsonEvents: any[] = events.map(event => (<any>Object).assign(event, {day: event.day.format("YYYY-MM-DD")}));
 
           reply(JSON.stringify({
-            notifications: houstonNotifications,
+            notifications: getNotifications(),
             events: jsonEvents,
             schedule: scheduler.pickupDays
           }))
@@ -72,6 +72,15 @@ server.route({
   method: 'GET',
   path: '/notifications/{city}',
   handler: function (request, reply) {
-    reply(JSON.stringify(notifications[request.params.city]))
+    reply(JSON.stringify(getNotifications()));
+  }
+});
+
+server.route({
+  method: 'POST',
+  path: '/notifications/{city}',
+  handler: function (request, reply) {
+    addNotification(request.payload);
+    reply(JSON.stringify(getNotifications())).header('Content-Type', 'application/json');
   }
 });

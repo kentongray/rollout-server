@@ -8,7 +8,7 @@
     "experimentalDecorators": true,
     "sourceMap": true,
     "sourceRoot": ".",
-    "inlineSourceMap": false,
+    "inlineSourceMap": true,
     "inlineSources": false
   },
   "files": [

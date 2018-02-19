@@ -2,6 +2,7 @@ import * as moment from "moment";
 import {Moment} from "moment";
 
 export interface Notification {
+  id?: string;
   title: string;
   text: string,
   link: string,
@@ -10,7 +11,7 @@ export interface Notification {
 }
 
 // someday it would be nice to have a backend for
-const notifications: { houston: [Notification] } = {
+const notifications: { houston: Notification[] } = {
   "houston": [{
     title: 'Tree/Junk Waste Is Coming Back!',
     text: 'Update: Tree/Junk Waste Collection to resume March 1, 2018. Tap here for more information.',
