@@ -5,7 +5,7 @@ export interface Notification {
   title: string;
   text: string,
   link: string,
-  expiresOn: Moment;
+  expiresOn: string; //date in format yyyy-mm-dd
   urgent: boolean
 }
 
