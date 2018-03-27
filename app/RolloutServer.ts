@@ -73,7 +73,7 @@ const start = async function() {
         else {
           return scheduler.getUpcomingEvents(request.query.days || 60).then((events) => {
             //convert moment day to friendly string (leaving serialization logic in here for now)
-            const jsonEvents: any[] = events.map(event => (<any>Object).assign(event, {day: event.day}));
+            const jsonEvents: any[] = events.map(event => (<any>Object).assign(event, {day: event.day.format("YYYY-MM-DD")}));
 
             return JSON.stringify({
               notifications: Notifications.getNotifications(),
