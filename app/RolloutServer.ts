@@ -4,10 +4,11 @@ import {getScheduler} from "./Scheduler";
 import * as Notifications from "./Database";
 import * as HapiBasicAuth from "hapi-auth-basic";
 import * as Inert from 'inert';
+
 const port = process.env.ROLLOUT_PORT || 80;
 const adminPassword = process.env.ROLLOUT_PASSWORD || 'changeme';
 const adminPath = process.env.ROLLOUT_ADMIN_PATH || '/Users/kgray/pw/rollout-admin/dist';
-const start = async function() {
+const start = async function () {
 
 
   const server = new Hapi.Server({port: port, routes: {cors: true}});
@@ -72,7 +73,7 @@ const start = async function() {
         }
         else {
           return scheduler.getUpcomingEvents(request.query.days || 60).then((events) => {
-            //convert moment day to friendly string (leaving serialization logic in here for now)
+            // convert moment day to friendly string (leaving serialization logic in here for now)
             const jsonEvents: any[] = events.map(event => (<any>Object).assign(event, {day: event.day.format("YYYY-MM-DD")}));
 
             return JSON.stringify({
@@ -89,8 +90,6 @@ const start = async function() {
           });
         }
       });
-
-
     }
   });
 
@@ -107,7 +106,7 @@ const start = async function() {
     path: '/auth',
     options: {
       auth: 'simple'
-      },
+    },
     handler: async function (request, h) {
       return true;
     }
@@ -120,7 +119,7 @@ const start = async function() {
       auth: 'simple'
     },
     handler: async function (request, h) {
-      Notifications.addNotification(JSON.parse(request.payload) );
+      Notifications.addNotification(JSON.parse(request.payload));
       return h.response(JSON.stringify(Notifications.getNotifications())).header('Content-Type', 'application/json');
     }
   });
