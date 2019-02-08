@@ -165,14 +165,11 @@ export class HoustonScheduler implements Scheduler {
   }
 
   getCategoriesForDay(day) {
-    //temporarily removing dates
-    /**
-    junk: this.isJunkDay(day),
+    let eventsForDay = {
+      waste: this.isWasteDay(day),
+      junk: this.isJunkDay(day),
       tree: this.isTreeDay(day),
       recycling: this.isRecyclingDay(day)
-      */
-    let eventsForDay = {
-      waste: this.isWasteDay(day)
     };
     //group filter out empty days
     return _.toPairs(eventsForDay).filter((category) => category[1]).map((category) => category[0]);
