@@ -155,7 +155,7 @@ export class HoustonScheduler implements Scheduler {
 
   isRecyclingDay(day) {
     //recycling schedule A occurs every other week (starting at second week)
-    let isEvenWeek = day.weeks() % 2 == 0;
+    let isEvenWeek = day.weeks() % 2 == 1;
     let isThisWeek = (this.pickupDays.recyclingOnEvenWeeks && isEvenWeek) || (!this.pickupDays.recyclingOnEvenWeeks && !isEvenWeek);
     return isThisWeek && day.day() == this.pickupDays.recyclingDay;
   }
