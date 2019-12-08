@@ -40,8 +40,8 @@ export class HoustonScheduler implements Scheduler {
   readonly mapServer = 'https://cohegis.houstontx.gov/cohgispub/rest/services/EGIS/cohgis_city_service_info_wm/MapServer/';
   //the city is cruel and uses different outfields for each day
   readonly scheduleFieldPerMap = {
-    6: 'DAY',
-    5: 'SERVICE_DA',
+    2: 'DAY',
+    3: 'SERVICE_DA',
     4: 'SERVICE_DAY'
   };
 
