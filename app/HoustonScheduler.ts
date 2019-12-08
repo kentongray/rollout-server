@@ -35,9 +35,9 @@ export class HoustonScheduler implements Scheduler {
     return moment(dayStr, 'dddd').day()
   }
 
-  readonly mapNumbers = [6, 5, 4]; //waste (6), junk (5) and recycling (4)
+  readonly mapNumbers = [2, 3, 4]; //waste (2), junk (5) and recycling (4)
 
-  readonly mapServer = 'http://mycity.houstontx.gov/cohgis/rest/services/SWD/SolidWaste_wm/MapServer/';
+  readonly mapServer = 'https://cohegis.houstontx.gov/cohgispub/rest/services/EGIS/cohgis_city_service_info_wm/MapServer/';
   //the city is cruel and uses different outfields for each day
   readonly scheduleFieldPerMap = {
     6: 'DAY',
