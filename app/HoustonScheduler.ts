@@ -112,7 +112,7 @@ export class HoustonScheduler implements Scheduler {
       //http://www.houstontx.gov/solidwaste/Recycle_Cal.pdf
       const aSchedule = recyclingSchedule.includes('-A');
       const isEvenYear = (moment().year() % 2 === 0);
-      recyclingOnEvenWeeks = isEvenYear ? !aSchedule : aSchedule;
+      recyclingOnEvenWeeks = !isEvenYear ? !aSchedule : aSchedule;
     }
 
     this.pickupDays = {wasteDay, junkWeekOfMonth, junkDay, recyclingDay, recyclingOnEvenWeeks};
