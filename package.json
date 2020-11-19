@@ -27,7 +27,7 @@
     "@types/chai-as-promised": "0.0.31",
     "@types/es6-promise": "0.0.32",
     "@types/geojson": "^1.0.2",
-    "@types/lodash": "^4.14.37",
+    "@types/lodash": "^4.14.165",
     "@types/mocha": "^2.2.41",
     "@types/node": "^7.0.29",
     "chai": "^4.0.2",
