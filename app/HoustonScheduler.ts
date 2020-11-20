@@ -1,7 +1,7 @@
 import * as moment from "moment";
 import {Moment} from "moment";
 import * as _ from "lodash";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import {HOLIDAYS} from "./HoustonHolidays";
 import {EventInfo, PickupDay, Scheduler} from "./Scheduler";
 
@@ -29,21 +29,15 @@ export class HoustonScheduler implements Scheduler {
   numberOfDays: number;
   pickupDays: PickupDay;
   holidays = HOLIDAYS;
-  whenLoaded: Promise<any>;
+  whenLoaded: Promise<void>;
 
   static getDayIndex(dayStr) {
     return moment(dayStr, 'dddd').day()
   }
 
-  readonly mapNumbers = [2, 3, 4]; //waste (2), junk (5) and recycling (4)
+  readonly mapNumbers = [3];
 
-  readonly mapServer = 'https://cohegis.houstontx.gov/cohgisapps/rest/services/GovernmentServices/SWDServices/MapServer/';
-  //the city is cruel and uses different outfields for each day
-  readonly scheduleFieldPerMap = {
-    2: 'DAY',
-    3: 'SERVICE_DA',
-    4: 'SERVICE_DAY'
-  };
+  readonly mapServer = 'https://mycity2.houstontx.gov/pubgis01/rest/services/EGIS/HOUSTON_CITYINFO/MapServer/3';
 
   /**
    * Initializes the obj with event data
@@ -60,22 +54,21 @@ export class HoustonScheduler implements Scheduler {
       geometryType: 'esriGeometryPoint',
       spatialRel: 'esriSpatialRelIntersects',
       returnGeometry: 'false',
-      outSR: '102100',
       f: 'json',
     };
+
+    //https://mycity2.houstontx.gov/pubgis01/rest/services/EGIS/HOUSTON_CITYINFO/MapServer/3/query?&geometry=%7B%22y%22%3A%2229.7982722%22%2C%22x%22%3A%22-95.3736702%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D&geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=SWDGarbageDay%2CSWDRecyclingDAY%2CSWDHeavyTrashDAY&returnGeometry=false&f=pjson
 
     const paramStr = Object.keys(params).reduce((paramStr, key) => `${paramStr}&${key}=${encodeURIComponent(params[key])}`, '?');
 
 
-    const [wastePromise, junkPromise, recyclingPromise] = this
-      .mapNumbers.map(map => `${this.mapServer}${map}/query${paramStr}&outFields=${this.scheduleFieldPerMap[map]}`)
-      .map(_ => axios.request({method: 'GET', url: _, timeout: 15000, responseType: 'json'}));
+    const url = `${this.mapServer}/query${paramStr}&outFields=SWDGarbageDay,SWDRecyclingDAY,SWDHeavyTrashDAY`;
+    console.log(url);
+    const request = axios.request({method: 'GET', url, timeout: 15000, responseType: 'json'});
 
     //get all relevant data
-    this.whenLoaded = Promise.all<any>([wastePromise, junkPromise, recyclingPromise]).then((allResults) => {
-      const [wasteData, junkData, recyclingData] = allResults.map(r => r.data);
-      this.parseData(wasteData, junkData, recyclingData);
-      return this;
+    this.whenLoaded = request.then((results) => {
+      this.parseData(results);
     });
   }
 
@@ -86,27 +79,24 @@ export class HoustonScheduler implements Scheduler {
    * @param recyclingData
    * @returns {Array<any>}
    */
-  parseData(wasteData, junkData, recyclingData) {
+  parseData(results:AxiosResponse) {
     //waste is one day a week
     let wasteDay = -1;
-    if (this.isValidData(wasteData)) {
-      wasteDay = HoustonScheduler.getDayIndex(wasteData.features[0].attributes.DAY);
-    }
-
     //heavy trash pickup is in the form of #rd WEEKDAY
     let junkWeekOfMonth = -1;
     let junkDay = -1;
-    if (this.isValidData(junkData)) {
-      let junkPattern = junkData.features[0].attributes.SERVICE_DA;
-      junkWeekOfMonth = parseInt(junkPattern.substr(0, 1));
-      junkDay = HoustonScheduler.getDayIndex(junkPattern.substr(junkPattern.indexOf(' ')));
-    }
-
     //recycling pickup is alternating weeks
     let recyclingDay = -1;
     let recyclingOnEvenWeeks = false;
-    if (this.isValidData(recyclingData)) {
-      let recyclingSchedule = recyclingData.features[0].attributes.SERVICE_DAY;
+    
+    console.log(results.data);
+    if (this.isValidData(results.data)) {
+      const attributes = results.data.features[0].attributes;
+      wasteDay = HoustonScheduler.getDayIndex(attributes.SWDGarbageDay);
+      let junkPattern = attributes.SWDHeavyTrashDAY;
+      junkWeekOfMonth = parseInt(junkPattern.substr(0, 1));
+      junkDay = HoustonScheduler.getDayIndex(junkPattern.substr(junkPattern.indexOf(' ')));
+      let recyclingSchedule = attributes.SWDRecyclingDAY;
       recyclingDay = HoustonScheduler.getDayIndex(recyclingSchedule.split('-')[0]);
       // on even years A schedule is on odd weeks, vice versa on odd years
       //http://www.houstontx.gov/solidwaste/Recycle_Cal.pdf
@@ -114,6 +104,7 @@ export class HoustonScheduler implements Scheduler {
       const isEvenYear = (moment().year() % 2 === 0);
       recyclingOnEvenWeeks = !isEvenYear ? !aSchedule : aSchedule;
     }
+
 
     this.pickupDays = {wasteDay, junkWeekOfMonth, junkDay, recyclingDay, recyclingOnEvenWeeks};
   }

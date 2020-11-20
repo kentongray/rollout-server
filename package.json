@@ -3,19 +3,19 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "tsc app/App.ts --outDir build || true && node build/App.js --harmony",
-    "dev": "tsc app/App.ts --outDir build || true && ROLLOUT_PORT=1337 node build/App.js --harmony",
-    "pretest": "tsc test/*.ts --module commonjs",
+    "start": "npx tsc app/App.ts --outDir build || true && node build/App.js --harmony",
+    "dev": "npx tsc app/App.ts --outDir build || true && ROLLOUT_PORT=1337 node build/App.js --harmony",
+    "pretest": "npx tsc test/*.ts --module commonjs",
     "test": "mocha"
   },
   "dependencies": {
-    "@types/lowdb": "^1.0.0",
-    "axios": "^0.14.0",
+    "@types/lowdb": "^1.0.9",
+    "axios": "^0.21.0",
     "geojson-utils": "^1.1.0",
     "hapi": "^17.2.0",
     "hapi-auth-basic": "^5.0.0",
     "inert": "^5.1.0",
-    "lodash": "^4.13.1",
+    "lodash": "^4.17.20",
     "lowdb": "^1.0.0",
     "moment": "^2.13.0",
     "rxjs": "^5.0.0-beta.9",
@@ -35,7 +35,7 @@
     "mocha": "^3.4.2",
     "mocha-typescript": "^1.1.4",
     "ts-node": "^0.9.1",
-    "typescript": "^2.7.2",
+    "typescript": "^4.1.2",
     "typings": "^1.3.3"
   }
 }
