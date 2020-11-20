@@ -1,4 +1,61 @@
 {
-  "notifications": [],
+  "notifications": [
+    {
+      "title": "Recycling Is Back!",
+      "text": "Recycling and other pick up schedules are back to normal! ",
+      "expiresOn": "2019-03-06",
+      "link": "http://www.houstontx.gov/solidwaste/",
+      "id": "rJHpAuhVE"
+    },
+    {
+      "title": " Glass Recycling Is Back!",
+      "text": "🍾 ♻️ After a two year break, curbside glass recycling is back! Use your single green bin to recycle clear, green and brown glass. \nTap here to read the announcement.\n",
+      "expiresOn": "2019-05-31",
+      "link": "http://houstontx.gov/mayor/press/return-of-glass-recycling.html",
+      "id": "Hy3kfWtFV"
+    },
+    {
+      "title": "Memorial Day Collection Schedule",
+      "text": "\nVisit our Solid Waste Management web page for an updated holiday collection schedule.",
+      "expiresOn": "2019-06-03",
+      "link": "http://houstontx.gov/solidwaste/press-05232019.html",
+      "id": "SkX9KqETE"
+    },
+    {
+      "title": "Thanksgiving Schedule",
+      "text": "All Thursday pickups will be on Friday. Friday will be picked up Saturday. Recycling centers are closed on Thursday and Friday. Tap here for more info",
+      "expiresOn": "2019-11-30",
+      "link": "http://www.houstontx.gov/solidwaste/press-11212019.html",
+      "id": "Sylf8rP3B"
+    },
+    {
+      "title": "Server Maintenance",
+      "text": "The city is performing upgrades to their servers this week so if you get an no service message my apologies! Try again later to get your schedule. Feel free to email info@rollouthouston.com if you have any questions.",
+      "expiresOn": "2019-12-12",
+      "link": "http://www.houstontx.gov/solidwaste/",
+      "id": "SkRw0xipS"
+    },
+    {
+      "title": "Memorial Day Schedule",
+      "text": "Tap here to see service changes for Memorial Day. Monday's pickups are Tuesday. ",
+      "expiresOn": "2020-05-28",
+      "link": "https://www.houstontx.gov/solidwaste/press-05212020.html",
+      "id": "HJcjM4diU"
+    },
+    {
+      "title": "🇺🇸 Enjoy the 4th of July! 🎇",
+      "text": "No schedule changes occur. Have a good one!",
+      "expiresOn": "2020-07-05",
+      "link": "http://www.houstontx.gov/solidwaste/",
+      "id": "Bk8nJbu0L"
+    },
+    {
+      "title": "Hurricane Laura - No Interruption In Service",
+      "text": "Be safe everyone! City of Houston is still picking up trash/recycling as normal. Recycling centers will be closed. Be sure to secure your bins tonight from any winds. Tap here to read more.\n",
+      "expiresOn": "2020-08-29",
+      "link": "https://www.houstontx.gov/solidwaste/updates_08262020.html",
+      "id": "SJvn5PE7P"
+    }
+  ],
   "holidays": []
 }
