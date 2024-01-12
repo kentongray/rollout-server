@@ -110,7 +110,7 @@ export class HoustonScheduler implements Scheduler {
             // on even years A schedule is on odd weeks, vice versa on odd years
             //http://www.houstontx.gov/solidwaste/Recycle_Cal.pdf
             const aSchedule = recyclingSchedule.indexOf('-A') !== -1;
-            recyclingOnEvenWeeks = aSchedule;
+            recyclingOnEvenWeeks = !aSchedule;
         }
 
 
