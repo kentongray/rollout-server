@@ -38,7 +38,7 @@ export class HoustonScheduler implements Scheduler {
 
     readonly mapNumbers = [3];
 
-    readonly mapServer = 'https://mycity2.houstontx.gov/pubgis01/rest/services/SWM/SWM_Services/MapServer/';
+    readonly mapServer = 'https://mycity2.houstontx.gov/gisweb01/rest/services/SWM/SWM_Services/MapServer/';
 
     /**
      * Initializes the obj with event data
