@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@types/lowdb": "^1.0.9",
-    "axios": "^0.21.0",
+    "axios": "^0.21.1",
     "geojson-utils": "^1.1.0",
     "hapi": "^17.2.0",
     "hapi-auth-basic": "^5.0.0",
